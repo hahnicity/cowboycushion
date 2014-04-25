@@ -1,3 +1,6 @@
 *.sw[op]
 *.log
-*.egg(-info/)?
+*.egg
+*.egg-info
+*.py[oc]
+*.[a-zA-Z]*
