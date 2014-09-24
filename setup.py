@@ -5,17 +5,10 @@ __version__ = "0.1"
 
 
 setup(
-    name="discourse",
-    author="Gregory Rehm, David Rodriguez",
+    name="cowboycushion",
+    author="Gregory Rehm",
     version=__version__,
-    description="Data analysis for the Disqus API",
+    description="Rate limiting libraries for Python API clients",
     packages=find_packages(),
     package_data={"*": ["*.html"]},
-    entry_points={
-        "console_scripts": [
-        ],
-    },
-    install_requires=[
-	"disqus-python"
-    ],
 )

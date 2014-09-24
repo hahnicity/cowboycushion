@@ -1,28 +1,26 @@
-# discourse
-A data analysis package using the Disqus API.
+# cowboycushion
+Rate limiting libraries for making API calls with python clients
 
 ## Installation
-    git clone git@github.com:hahnicity/discourse.git
-    cd discourse
+    git clone git@github.com:hahnicity/cowboycushion.git
+    cd cowboycushion
 	python setup.py develop
 
 ## Usage
 ### Limiting the rate of API calls
 As of this moment we only have a tool that limits the rate of the API calls we 
-make to the Disqus API. So given our rate of calls (1000 calls every 10 minutes)
+make for a discrete client. So given our rate of calls (1000 calls every 10 minutes)
 we can input this logic into the limiter.
 
-    from discourse.limiter import Limiter
-    from disqusapi import DisqusAPI
+    from cowboycushion.limiter import Limiter
+    from clientapi import MyAPIClient
     
-    disqus = DisqusAPI(secret_key=secret, public_key=public)
-    client = Limiter(disqus, <timeout>, 1000, 60 * 10)
+    client = MyAPIClient(secret_key=secret, public_key=public)
+    limited_client = Limiter(client, <timeout>, 1000, 60 * 10)
 
-Now we can call the client like we normally would call the `disqus` object
+Now we can call the client like we normally would call the `client` object
 
-    client.posts.details(post=1, version="3.0")
+    limited_client.my_client_method(...)
 
-The only difference is the limiter will keep track of the time we are making
-API calls to the Disqus API. If we go over our quota, the rate limiter will
-wait until the next time we are available to make a call, checking at interval,
-`<timeout>` that we have specified.
+The Limiter will keep track of all the API calls that we make and only attempt to
+make an API call when possible.
