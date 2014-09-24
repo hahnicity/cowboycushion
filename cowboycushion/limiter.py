@@ -2,9 +2,8 @@
 discourse.limiter
 ~~~~~~~~~~~~~~~~~
 
-A really dumb rate limiter that makes the assumption that each time we call it we are making an
-API call. Is based off of the disqus API limitations that you can only make 1000 calls every
-10 minutes.
+A really dumb rate limiter that makes the assumption that each time we call it we are
+making an API call.
 """
 from time import sleep, time
 
