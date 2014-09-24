@@ -2,9 +2,8 @@
 Rate limiting libraries for making API calls with python clients
 
 ## Installation
-    git clone git@github.com:hahnicity/cowboycushion.git
-    cd cowboycushion
-	python setup.py develop
+
+    pip install cowboycushion
 
 ## Usage
 ### Limiting the rate of API calls
