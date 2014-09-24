@@ -7,19 +7,36 @@ Rate limiting libraries for making API calls with python clients
 
 ## Usage
 ### Limiting the rate of API calls
-As of this moment we only have a tool that limits the rate of the API calls we 
-make for a discrete client. So given our rate of calls (1000 calls every 10 minutes)
-we can input this logic into the limiter.
+We have multiple different ways of limiting API calls. One using a simple python wrapper
+that stores all call times within the python object, and the other that stores call times
+inside a Redis DB.
 
-    from cowboycushion.limiter import Limiter
+#### Pure Python Wrapper
+
+    from cowboycushion.limiter import SimpleLimiter
     from clientapi import MyAPIClient
     
-    client = MyAPIClient(secret_key=secret, public_key=public)
-    limited_client = Limiter(client, <timeout>, 1000, 60 * 10)
+    client = MyAPIClient(...)
+    limited_client = SimpleLimiter(client, <timeout for polling to call API>, 1000, 60 * 10)
 
 Now we can call the client like we normally would call the `client` object
 
     limited_client.my_client_method(...)
 
-The Limiter will keep track of all the API calls that we make and only attempt to
-make an API call when possible.
+The `SimpleLimiter` will keep track of all the API calls that we make and only attempt to
+make an API call when possible. Since `SimpleLimiter` is a pure python construct all call
+times will be lost when our program stops execution. For this reason we have created a 
+`RedisLimiter` to add persistence of call time storage
+
+#### Redis Limiter
+
+    from cowboycushion.limiter import RedisLimiter
+    from clientapi import MyAPIClient
+
+    client = MyAPIClient
+    limited_client = RedisLimiter(client, <timeout for polling>, 1000, 60 * 10, "localhost", 6379, 0)
+    limited_client.my_client_method(...)
+
+If our program halts execution then redis will maintain our list of the times we called 
+the API. When we reinstantiate the limiter then our client will pick up the list of these 
+calls and be able to know whether/not we should make an API call.

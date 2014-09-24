@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
 
-__version__ = "0.1"
+__version__ = "0.2"
 
 
 setup(
@@ -11,4 +11,5 @@ setup(
     description="Rate limiting libraries for Python API clients",
     packages=find_packages(),
     package_data={"*": ["*.html"]},
+    install_requires=["redis"]
 )
