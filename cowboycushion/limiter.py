@@ -71,13 +71,13 @@ class RedisLimiter(Limiter):
         return self._redis.zcard(self._calls_key)
 
     def _get_first_call(self):
-        return int(self._redis.zrange(self._calls_key, 0, 0))
+        return float(self._redis.zrange(self._calls_key, 0, 0)[0])
 
     def _record_call(self):
         self._redis.zadd(self._calls_key, time(), time())
 
     def _remove_first_call(self):
-        self._redis.zremrangebyrank("test_zredis", 0, 0)
+        self._redis.zremrangebyrank(self._calls_key, 0, 0)
 
 
 class SimpleLimiter(Limiter):

@@ -1,31 +1,62 @@
 """
-discourse.tests.test_limiter
+cowboycushion.tests.test_limiter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
-from time import time
+from time import sleep, time
 
-from mock import Mock
+from mock import Mock, patch
+from mockredis import mock_strict_redis_client
 from nose.tools import assert_less_equal, eq_
 
-from discourse.limiter import Limiter
+from cowboycushion.limiter import RedisLimiter, SimpleLimiter
 
 
 CALLS_PER_BATCH = 10
+REDIS_DB = 15
+REDIS_HOSTNAME = "localhost"
+REDIS_PORT = 6379
 SECONDS_PER_BATCH = 1
+SLEEP_DURATION = .1
 TIMEOUT = .5
 
 
-class TestLimiter(object):
+def _call_many_apis(limited_client, mock_client, sleep_between_calls=False):
+    start = time()
+    for _ in range(0, CALLS_PER_BATCH + 1):
+        if sleep_between_calls:
+            sleep(SLEEP_DURATION)
+        limited_client.do_stuff()
+    end = time()
+    eq_(mock_client.do_stuff.call_count, CALLS_PER_BATCH + 1)
+    assert_less_equal(end - start - TIMEOUT, SECONDS_PER_BATCH)
+    assert_less_equal(SECONDS_PER_BATCH, end - start + TIMEOUT)
+    eq_(limited_client.call_count, CALLS_PER_BATCH)
+
+
+class TestSimpleLimiter(object):
     def setup(self):
         self.client = Mock()
-        self.limited_client = Limiter(self.client, TIMEOUT, CALLS_PER_BATCH, SECONDS_PER_BATCH)
+        self.limited_client = SimpleLimiter(
+            self.client, TIMEOUT, CALLS_PER_BATCH, SECONDS_PER_BATCH
+        )
 
     def test_calling_many_apis(self):
-        start = time()
-        for _ in range(0, CALLS_PER_BATCH + 1):
-            self.limited_client.do_stuff()
-        end = time()
-        eq_(self.client.do_stuff.call_count, CALLS_PER_BATCH + 1)
-        assert_less_equal(end - start - TIMEOUT, SECONDS_PER_BATCH)
-        assert_less_equal(SECONDS_PER_BATCH, end - start + TIMEOUT)
-        eq_(len(self.limited_client.calls), CALLS_PER_BATCH)
+        _call_many_apis(self.limited_client, self.client)
+
+
+class TestRedisLimiter(object):
+    @patch("cowboycushion.limiter.StrictRedis", mock_strict_redis_client)
+    def setup(self):
+        self.client = Mock()
+        self.limited_client = RedisLimiter(
+            self.client,
+            TIMEOUT,
+            CALLS_PER_BATCH,
+            SECONDS_PER_BATCH,
+            REDIS_HOSTNAME,
+            REDIS_PORT,
+            REDIS_DB
+        )
+
+    def test_calling_many_apis(self):
+        _call_many_apis(self.limited_client, self.client, sleep_between_calls=True)

@@ -11,5 +11,6 @@ setup(
     description="Rate limiting libraries for Python API clients",
     packages=find_packages(),
     package_data={"*": ["*.html"]},
-    install_requires=["redis"]
+    install_requires=["redis"],
+    tests_require=["mock", "mockredispy"]
 )
