@@ -1,6 +1,6 @@
 """
-discourse.limiter
-~~~~~~~~~~~~~~~~~
+cowboycushion.limiter
+~~~~~~~~~~~~~~~~~~~~~
 
 A really dumb rate limiter that makes the assumption that each time we call it we are
 making an API call.
