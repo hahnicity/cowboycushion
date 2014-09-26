@@ -10,6 +10,12 @@ from time import sleep, time
 from redis import StrictRedis
 
 
+class SingleProcessLimiter(object):
+    def _call_api(self, attr):
+        self._record_call()
+        return getattr(self.client, attr)
+
+
 class Limiter(object):
     def __getattr__(self, attr):
         if self._verify_we_can_make_call():
@@ -30,10 +36,6 @@ class Limiter(object):
     def timeout(self):
         return self._timeout
 
-    def _call_api(self, attr):
-        self._record_call()
-        return getattr(self.client, attr)
-
     def _verify_we_can_make_call(self):
         if self.call_count >= self.calls_per_batch:
             if self._get_first_call() < time() - self.seconds_per_batch:
@@ -50,22 +52,7 @@ class Limiter(object):
         self._remove_first_call()
 
 
-class RedisLimiter(Limiter):
-    def __init__(self,
-                 client,
-                 timeout,
-                 calls_per_batch,
-                 seconds_per_batch,
-                 redis_host,
-                 redis_port,
-                 redis_db):
-        self.client = client
-        self._timeout = timeout
-        self._calls_per_batch = calls_per_batch
-        self._seconds_per_batch = seconds_per_batch
-        self._redis = StrictRedis(host=redis_host, port=redis_port, db=redis_db)
-        self._calls_key = "redis_limiter_api_call_times"
-
+class RedisStorage(Limiter):
     @property
     def call_count(self):
         return self._redis.zcard(self._calls_key)
@@ -80,14 +67,7 @@ class RedisLimiter(Limiter):
         self._redis.zremrangebyrank(self._calls_key, 0, 0)
 
 
-class SimpleLimiter(Limiter):
-    def __init__(self, client, timeout, calls_per_batch, seconds_per_batch):
-        self.client = client
-        self._timeout = timeout
-        self._calls_per_batch = calls_per_batch
-        self._seconds_per_batch = seconds_per_batch
-        self._calls = []
-
+class SimpleStorage(Limiter):
     @property
     def calls(self):
         """
@@ -107,3 +87,29 @@ class SimpleLimiter(Limiter):
 
     def _remove_first_call(self):
         del self.calls[0]
+
+
+class SimpleLimiter(SingleProcessLimiter, SimpleStorage):
+    def __init__(self, client, timeout, calls_per_batch, seconds_per_batch):
+        self.client = client
+        self._timeout = timeout
+        self._calls_per_batch = calls_per_batch
+        self._seconds_per_batch = seconds_per_batch
+        self._calls = []
+
+
+class RedisLimiter(SingleProcessLimiter, RedisStorage):
+    def __init__(self,
+                 client,
+                 timeout,
+                 calls_per_batch,
+                 seconds_per_batch,
+                 redis_host,
+                 redis_port,
+                 redis_db):
+        self.client = client
+        self._timeout = timeout
+        self._calls_per_batch = calls_per_batch
+        self._seconds_per_batch = seconds_per_batch
+        self._redis = StrictRedis(host=redis_host, port=redis_port, db=redis_db)
+        self._calls_key = "redis_limiter_api_call_times"

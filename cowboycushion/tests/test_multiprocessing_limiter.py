@@ -1,25 +1,25 @@
-from multiprocessing import Pool
 from time import time
 
 from nose.tools import assert_less_equal, eq_
 
-from cowboycushion.multiprocessing_limiter import SimpleLimiter
+from cowboycushion.multiprocessing_limiter import SimpleMultiprocessingLimiter
 from cowboycushion.tests.constants import *
+
+CALL_EXECUTION_TIME = 2
 
 
 def _multiprocessing_api_calls(limited_client, mock_client):
-    start = time()
-    pool = Pool(POOL_SIZE)
+    calls_made = CALLS_PER_BATCH * 3 + 1
     jobs = []
-    for _ in range(CALLS_PER_BATCH + 5):
-        jobs.append(pool.apply_async(limited_client.do_stuff, args=()))
-    results = [job.get() for job in jobs]
-    pool.close()
-    pool.join()
+    start = time()
+    for i in range(calls_made):
+        jobs.append(limited_client.do_stuff())
+    limited_client.close()
+    limited_client.join()
     end = time()
-    eq_(len(results), CALLS_PER_BATCH + 5)
-    assert_less_equal(end - start - TIMEOUT, SECONDS_PER_BATCH)
-    assert_less_equal(SECONDS_PER_BATCH, end - start + TIMEOUT)
+    eq_(len(jobs), calls_made)
+    assert_less_equal(end - start - TIMEOUT, SECONDS_PER_BATCH * 3)
+    assert_less_equal(SECONDS_PER_BATCH * 3, end - start + TIMEOUT)
     eq_(limited_client.call_count, CALLS_PER_BATCH)
 
 
@@ -31,8 +31,8 @@ class MultiprocessingMockClient(object):
 class TestSimpleMultiprocessingLimiter(object):
     def setup(self):
         self.client = MultiprocessingMockClient()
-        self.limited_client = SimpleLimiter(
-            self.client, TIMEOUT, CALLS_PER_BATCH, SECONDS_PER_BATCH
+        self.limited_client = SimpleMultiprocessingLimiter(
+            self.client, TIMEOUT, CALLS_PER_BATCH, SECONDS_PER_BATCH, POOL_SIZE
         )
 
     def test_calling_many_apis(self):
