@@ -1,6 +1,6 @@
 from time import time
 
-from nose.tools import assert_less_equal, eq_
+from nose.tools import assert_greater_equal, assert_less_equal, eq_
 
 from cowboycushion.multiprocessing_limiter import SimpleMultiprocessingLimiter
 from cowboycushion.tests.constants import *
@@ -13,7 +13,11 @@ def _multiprocessing_api_calls(limited_client, mock_client):
     jobs = []
     start = time()
     for i in range(calls_made):
+        job_start = time()
         jobs.append(limited_client.do_stuff())
+        job_end = time()
+        if i > 0 and i % CALLS_PER_BATCH == 0:
+            assert_greater_equal(job_end - job_start, SECONDS_PER_BATCH)
     limited_client.close()
     limited_client.join()
     end = time()
