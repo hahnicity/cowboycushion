@@ -15,15 +15,24 @@ from cowboycushion.tests.constants import *
 def _call_many_apis(limited_client, mock_client, sleep_between_calls=False):
     start = time()
     calls_made = CALLS_PER_BATCH + 1
+    if sleep_between_calls:
+        call_duration = SLEEP_DURATION
+    else:
+        call_duration = 0
     for _ in range(calls_made):
-        if sleep_between_calls:
-            sleep(SLEEP_DURATION)
+        sleep(call_duration)
         limited_client.do_stuff()
     end = time()
     eq_(mock_client.do_stuff.call_count, CALLS_PER_BATCH + 1)
-    # This math is bad. I need to either make it simple or better
-    assert_less_equal(end - start - TIMEOUT, SECONDS_PER_BATCH)
-    assert_less_equal(SECONDS_PER_BATCH, end - start + TIMEOUT)
+    if call_duration * CALLS_PER_BATCH >= SECONDS_PER_BATCH:
+        expected_time = call_duration * calls_made
+    else:
+        expected_time = (
+            SECONDS_PER_BATCH * (calls_made / CALLS_PER_BATCH) +
+            (calls_made - calls_made / CALLS_PER_BATCH) * call_duration
+        )
+    assert_less_equal(end - start - TIMEOUT, expected_time)
+    assert_less_equal(expected_time, end - start + TIMEOUT)
     eq_(limited_client.call_count, CALLS_PER_BATCH)
 
 
