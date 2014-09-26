@@ -2,7 +2,6 @@
 cowboycushion.tests.test_limiter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
-from multiprocessing import Pool
 from time import sleep, time
 
 from mock import Mock, patch
@@ -21,7 +20,6 @@ def _call_many_apis(limited_client, mock_client, sleep_between_calls=False):
         limited_client.do_stuff()
     end = time()
     eq_(mock_client.do_stuff.call_count, CALLS_PER_BATCH + 1)
-    _perform_assertions(limited_client, mock_client, start, end)
     assert_less_equal(end - start - TIMEOUT, SECONDS_PER_BATCH)
     assert_less_equal(SECONDS_PER_BATCH, end - start + TIMEOUT)
     eq_(limited_client.call_count, CALLS_PER_BATCH)
