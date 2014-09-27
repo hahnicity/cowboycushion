@@ -56,14 +56,14 @@ call we make will return an asynchronous job.
     limited_client.close()
     limited_client.join()
 
-**Disclaimer** since we cannot actually pickle methods (only functions) we had to make some modifications to the
-way python pickles objects in `cowboycushion.multiprocessing_limiter`. The method we used is described in this
-[stackoverflow post][1]. As a result of these modifications **only** import cowboycushion.multiprocessing_pool if you
-need it.
-
 The usage of the `RedisMultiprocessingLimiter` is very similar
 
     client = MyAPIClient(...)
     limited_client = RedisMultiprocessingLimiter(...)
+
+**Disclaimer** since we cannot actually pickle methods (only functions) we had to make some modifications to the
+way python pickles objects in `cowboycushion.multiprocessing_limiter`. The method we used is described in this
+[stackoverflow post][1]. As a result of these modifications **only** import cowboycushion.multiprocessing_pool if you
+need it.
 
 [1]: http://stackoverflow.com/questions/1816958/cant-pickle-type-instancemethod-when-using-pythons-multiprocessing-pool-ma
