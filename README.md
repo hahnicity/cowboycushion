@@ -1,4 +1,6 @@
 # cowboycushion
+![Cowboy Cushion][http://www.lindsay.com/common/getimage.php?id=1915&width=0&height=0http://www.lindsay.com/common/getimage.php?id=1915&width=0&height=0]
+
 Rate limiting libraries for making API calls with python clients
 
 ## Installation
